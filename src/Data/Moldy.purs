@@ -2,11 +2,12 @@ module Data.Moldy where
 
 import Prelude
 import Data.Foldable (class Foldable, foldMap, foldr, foldl, foldrDefault, foldlDefault)
+import Data.Traversable (class Traversable)
 import Data.String (toCharArray)
 import Data.Monoid (class Monoid, mempty)
 import Data.Monoid.Endo (Endo(..))
 import Data.Monoid.Dual (Dual(..))
-import Data.Newtype (unwrap)
+import Data.Newtype (class Newtype, unwrap)
 
 -- | A Moldable type `t` is a monomorphic foldable structure with
 -- | elements of type `e`.
@@ -39,7 +40,14 @@ mold :: forall t e. (Moldable t e, Monoid e) => t -> e
 mold = moldMap id
 
 -- | Every Foldable is Moldable
-instance moldableFoldable :: Foldable t => Moldable (t e) e where
+newtype Molded t e = Molded (t e)
+
+derive instance newtypeMolded :: Newtype (Molded t e) _
+derive newtype instance foldableMolded :: Foldable t => Foldable (Molded t)
+derive newtype instance functorMolded :: Functor t => Functor (Molded t)
+derive newtype instance traversableMolded :: Traversable t => Traversable (Molded t)
+
+instance moldableFoldable :: Foldable t => Moldable (Molded t e) e where
   moldMap = foldMap
   moldl = foldl
   moldr = foldr
