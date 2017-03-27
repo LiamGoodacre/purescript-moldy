@@ -17,11 +17,11 @@ class Moldable t e | t -> e where
   moldr :: forall m. (e -> m -> m) -> m -> t -> m
 
 -- | A default implementation of `moldMap` based on `moldr`
-moldMapDefaultR :: forall t e m. (Moldable t e, Monoid m) =>
+moldMapDefaultR :: forall t e m. Moldable t e => Monoid m =>
   (e -> m) -> t -> m
 moldMapDefaultR f t = moldr (append <<< f) mempty t
 
-moldMapDefaultL :: forall t e m. (Moldable t e, Monoid m) =>
+moldMapDefaultL :: forall t e m. Moldable t e => Monoid m =>
   (e -> m) -> t -> m
 moldMapDefaultL f t = moldl (\m -> append m <<< f) mempty t
 
@@ -36,7 +36,7 @@ moldrDefault :: forall t e m. Moldable t e =>
 moldrDefault f u t = unwrap (moldMap (Endo <<< f) t) u
 
 -- | Combine all the elements in the moldable type using the action of the monoid
-mold :: forall t e. (Moldable t e, Monoid e) => t -> e
+mold :: forall t e. Moldable t e => Monoid e => t -> e
 mold = moldMap id
 
 -- | Every Foldable is Moldable
