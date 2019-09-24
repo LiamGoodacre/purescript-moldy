@@ -1,13 +1,13 @@
 module Data.Moldy where
 
 import Prelude
+
 import Data.Foldable (class Foldable, foldMap, foldr, foldl, foldrDefault, foldlDefault)
-import Data.Traversable (class Traversable)
-import Data.String (toCharArray)
-import Data.Monoid (class Monoid, mempty)
-import Data.Monoid.Endo (Endo(..))
 import Data.Monoid.Dual (Dual(..))
+import Data.Monoid.Endo (Endo(..))
 import Data.Newtype (class Newtype, unwrap)
+import Data.String (CodePoint, toCodePointArray)
+import Data.Traversable (class Traversable)
 
 -- | A Moldable type `t` is a monomorphic foldable structure with
 -- | elements of type `e`.
@@ -37,7 +37,7 @@ moldrDefault f u t = unwrap (moldMap (Endo <<< f) t) u
 
 -- | Combine all the elements in the moldable type using the action of the monoid
 mold :: forall t e. Moldable t e => Monoid e => t -> e
-mold = moldMap id
+mold = moldMap identity
 
 -- | Every Foldable is Moldable
 newtype Molded t e = Molded (t e)
@@ -53,11 +53,11 @@ instance moldableFoldable :: Foldable t => Moldable (Molded t e) e where
   moldr = foldr
 
 -- TODO: make more efficient
-instance moldableString :: Moldable String Char where
-  moldMap f = foldMap f <<< toCharArray
+instance moldableString :: Moldable String CodePoint where
+  moldMap f = foldMap f <<< toCodePointArray
   moldl f = moldlDefault f
   moldr f = moldrDefault f
-  
+
 -- | For any `Moldable t e`, `Mold t e` is Foldable
 data Moldy t e a = Moldy (e -> a) t
 
@@ -66,7 +66,7 @@ derive instance functorMoldy :: Functor (Moldy t e)
 
 -- | Construct a Moldy
 moldy :: forall t e. t -> Moldy t e e
-moldy = Moldy id
+moldy = Moldy identity
 
 instance foldableMoldy :: Moldable t e => Foldable (Moldy t e) where
   foldMap f (Moldy g m) = moldMap (f <<< g) m
