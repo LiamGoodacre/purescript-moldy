@@ -72,10 +72,10 @@ class MoldMapRecord (list :: RowList) (row :: # Type) where
   moldMapRecord :: forall m. Monoid m =>
     RLProxy list -> (Variant row -> m) -> MoldableRecord row -> m
 
-instance moldableRecordNil :: MoldMapRecord RowList.Nil row where
+instance moldMapRecordNil :: MoldMapRecord RowList.Nil row where
   moldMapRecord _ _ _ = mempty
 
-instance moldableRecordCons
+instance moldMapRecordCons
   :: (Row.Cons sym a r' row,
       IsSymbol sym,
       MoldMapRecord tail row)
