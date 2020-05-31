@@ -20,7 +20,8 @@
   "dependencies": {
     "purescript-prelude": "^4.1.0",
     "purescript-foldable-traversable": "^4.0.1",
-    "purescript-strings": "^4.0.0"
+    "purescript-strings": "^4.0.0",
+    "purescript-variant": "^6.0.1"
   },
   "devDependencies": {
     "purescript-console": "^4.1.0",
