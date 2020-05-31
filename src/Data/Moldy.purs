@@ -7,7 +7,15 @@ import Data.Monoid.Dual (Dual(..))
 import Data.Monoid.Endo (Endo(..))
 import Data.Newtype (class Newtype, unwrap)
 import Data.String (CodePoint, toCodePointArray)
+import Data.Symbol (class IsSymbol, SProxy(..))
 import Data.Traversable (class Traversable)
+import Data.Variant (Variant)
+import Data.Variant (inj) as Variant
+import Prim.Row (class Cons) as Row
+import Prim.RowList (Cons, Nil) as RowList
+import Prim.RowList (class RowToList, kind RowList)
+import Record (get) as Record
+import Type.Data.RowList (RLProxy(..))
 
 -- | A Moldable type `t` is a monomorphic foldable structure with
 -- | elements of type `e`.
@@ -55,6 +63,34 @@ instance moldableFoldable :: Foldable t => Moldable (Molded t e) e where
 -- TODO: make more efficient
 instance moldableString :: Moldable String CodePoint where
   moldMap f = foldMap f <<< toCodePointArray
+  moldl f = moldlDefault f
+  moldr f = moldrDefault f
+
+newtype MoldableRecord r = MoldableRecord { | r }
+
+class MoldMapRecord (list :: RowList) (row :: # Type) where
+  moldMapRecord :: forall m. Monoid m =>
+    RLProxy list -> (Variant row -> m) -> MoldableRecord row -> m
+
+instance moldMapRecordNil :: MoldMapRecord RowList.Nil row where
+  moldMapRecord _ _ _ = mempty
+
+instance moldMapRecordCons
+  :: (Row.Cons sym a r' row,
+      IsSymbol sym,
+      MoldMapRecord tail row)
+  => MoldMapRecord (RowList.Cons sym a tail) row where
+  moldMapRecord _ f mr@(MoldableRecord r) = f variant <> moldMapRecord tail f mr
+    where
+      sym = SProxy :: SProxy sym
+      tail = RLProxy :: RLProxy tail
+      variant = Variant.inj sym (Record.get sym r)
+
+instance moldableRecord
+  :: (RowToList r rl,
+      MoldMapRecord rl r)
+  => Moldable (MoldableRecord r) (Variant r) where
+  moldMap f = moldMapRecord (RLProxy :: RLProxy rl) f
   moldl f = moldlDefault f
   moldr f = moldrDefault f
 
